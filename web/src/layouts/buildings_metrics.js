@@ -35,7 +35,7 @@ export default function BuildingMetrics() {
     const [data, setData] = useState([])
     const [startDate, setStartDate] = useState(new Date('2021-01-01'));
     const [endDate, setEndDate] = useState(new Date('2022-08-01'));
-    const [interval, setInterval] = useState('daily')
+    const [dataInterval, setDataInterval] = useState('daily')
 
     const [height, setHeight] = useState(0)
     const [options, setOptions] = useState({
@@ -61,67 +61,61 @@ export default function BuildingMetrics() {
         function handleResize() {
             setHeight(window.innerHeight)
         }
-
         window.addEventListener("resize", handleResize)
-
         handleResize()
-        options.height = (height - 65) * 0.79
-        setOptions(options)
+        const newHeight = (height - 65) * 0.79
+        setOptions({...options, height: newHeight})
 
         return () => {
             window.removeEventListener("resize", handleResize)
         }
-    }, [height])
+    }, [height, options])
 
     React.useEffect(() => {
         if (!TokenIsValid(localStorage.getItem('test-token'))) {
             navigate("/login");
-            navigate(0)
         }
-    }, []);
+    }, [navigate]);
 
     React.useEffect(() => {
         const formattedStartDate = Moment(startDate).format('YYYY-MM-DD')
         const formattedEndDate = Moment(endDate).format('YYYY-MM-DD')
-        GetBuildingMetrics(buildingId, formattedStartDate, formattedEndDate, interval).then(data => {
+        GetBuildingMetrics(buildingId, formattedStartDate, formattedEndDate, dataInterval).then(data => {
             const tmpData =
                 [[
                     { type: "date", label: "Day" },
                     "Average energy consumption",
                 ]];
 
-            for (let I = 0; I < data.length - 1; I++) {
-                const row = new Array(new Date(Date.parse(data[I].timestamp)), data[I].value)
+            for (let i = 0; i < data.length - 1; i++) {
+                const row = [new Date(Date.parse(data[i].timestamp)), data[i].value]
                 tmpData.push(row)
             }
             setData(tmpData)
         })
-
-
-    }, [buildingId, startDate, endDate, interval]);
+    }, [buildingId, startDate, endDate, dataInterval]);
 
     const logoutUser = () => {
         localStorage.removeItem('test-token')
+        localStorage.removeItem('email')
         navigate("/login");
-        navigate(0)
     }
 
     const changeToDaily = () => {
-        setInterval('daily')
+        setDataInterval('daily')
     }
 
     const changeToHourly = () => {
-        setInterval('hourly')
+        setDataInterval('hourly')
     }
 
-    const goToBookrmarks = (_id) => {
+    const goToBookrmarks = () => {
         navigate(`/bookmarks`);
-        navigate(0)
     }
-    const goToBuildings = (_id) => {
+    const goToBuildings = () => {
         navigate(`/buildings`);
-        navigate(0)
     }
+    
     return (
         <div style={{ width: '100vw', height: '100vh', backgroundColor: st.bgColor }}>
             <Box sx={{ flexGrow: 1 }}>
@@ -189,7 +183,6 @@ export default function BuildingMetrics() {
                         options={options}
                     />
                 </Grid>
-
             </Grid>
         </div>
     );

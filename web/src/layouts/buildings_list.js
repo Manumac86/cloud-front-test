@@ -25,8 +25,6 @@ import { TokenIsValid } from '../api/auth'
 import { GetBuildings } from '../api/buildings'
 import { GetBookmarks, SaveBookmarks, DeleteBookmarks } from '../api/bookmarks';
 
-const pages = ['Products', 'Pricing', 'Blog'];
-
 export default function BuildingList() {
     const navigate = useNavigate();
     const [rows, setRows] = useState([]);
@@ -35,62 +33,59 @@ export default function BuildingList() {
     React.useEffect(() => {
         if (!TokenIsValid(localStorage.getItem('test-token'))) {
             navigate("/login");
-            navigate(0)
         }
         GetBuildings().then(data => {
-            GetBookmarks().then(bld => {
-                const tmpCache = {}
-                bld.forEach(b => {
-                    tmpCache[b.BuildingId] = b
+            GetBookmarks().then(buildings => {
+                const tmpCache = []
+                buildings.forEach(building => {
+                    tmpCache[building.BuildingId] = building
                 })
                 setFavs(tmpCache)
                 setRows(data)
             })
         })
-    }, []);
+    }, [navigate]);
 
+    // TODO: Use Auth context. Avoid repeating code.
     const logoutUser = () => {
         localStorage.removeItem('test-token')
+        localStorage.removeItem('email')
         navigate("/login");
-        navigate(0)
     }
 
-    const goToBookrmarks = (_id) => {
+    const goToBookrmarks = () => {
         navigate(`/bookmarks`);
-        navigate(0)
     }
-    const goToBuildings = (_id) => {
+    const goToBuildings = () => {
         navigate(`/buildings`);
-        navigate(0)
     }
-    const goToBuildingMetrics = (_id) => {
-        navigate(`/buildings/${_id}`);
-        navigate(0)
+    const goToBuildingMetrics = (id) => {
+        navigate(`/buildings/${id}`);
     }
 
-    const saveBookmarks = (_id) => {
-        SaveBookmarks(_id).then(() => {
-            GetBookmarks().then(bld => {
+    const saveBookmarks = (id) => {
+        SaveBookmarks(id).then(() => {
+            // TODO: Move logic to a hook to avoid repeating code.
+            GetBookmarks().then(buildings => {
                 const tmpCache = {}
-                bld.forEach(b => {
-                    tmpCache[b.BuildingId] = b
+                buildings.forEach(building => {
+                    tmpCache[building.BuildingId] = building
                 })
                 setFavs(tmpCache)
             })
         })
     }
 
-    const deleteBookmarks = (_id) => {
-        DeleteBookmarks(_id).then(() => {
-
-            GetBookmarks().then(bld => {
+    const deleteBookmarks = (id) => {
+        DeleteBookmarks(id).then(() => {
+            // TODO: Move logic to a hook to avoid repeating code.
+            GetBookmarks().then(buildings => {
                 const tmpCache = {}
-                bld.forEach(b => {
-                    tmpCache[b.BuildingId] = b
+                buildings.forEach(building => {
+                    tmpCache[building.BuildingId] = building
                 })
                 setFavs(tmpCache)
             })
-
         })
     }
 

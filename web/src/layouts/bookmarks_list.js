@@ -24,17 +24,16 @@ import { TokenIsValid } from '../api/auth'
 import { GetBuildings } from '../api/buildings'
 import { GetBookmarks, DeleteBookmarks } from '../api/bookmarks';
 
-const pages = ['Products', 'Pricing', 'Blog'];
-
 export default function BookmarksList() {
     const navigate = useNavigate();
     const [rows, setRows] = useState([]);
     const [build, setBuild] = useState([]);
 
+    // TODO: Replace with react custom hook to avoid side effects and unnecesary re-renders
+    // Use Memoize techniques.
     React.useEffect(() => {
         if (!TokenIsValid(localStorage.getItem('test-token'))) {
             navigate("/login");
-            navigate(0)
         }
         GetBookmarks().then(data => {
             GetBuildings().then(bld => {
@@ -46,34 +45,31 @@ export default function BookmarksList() {
                 setRows(data)
             })
         })
-    }, []);
+    }, [navigate]);
 
     const logoutUser = () => {
         localStorage.removeItem('test-token')
+        localStorage.removeItem('email')
         navigate("/login");
-        navigate(0)
     }
 
-    const goToBookrmarks = (_id) => {
+    const goToBookrmarks = () => {
         navigate(`/bookmarks`);
-        navigate(0)
     }
-    const goToBuildings = (_id) => {
+
+    const goToBuildings = () => {
         navigate(`/buildings`);
-        navigate(0)
-    }
-    const goToBuildingMetrics = (_id) => {
-        navigate(`/buildings/${_id}`);
-        navigate(0)
     }
 
-    const deleteBookmarks = (_id) => {
-        DeleteBookmarks(_id).then(() => {
+    const goToBuildingMetrics = (id) => {
+        navigate(`/buildings/${id}`);
+    }
 
+    const deleteBookmarks = (id) => {
+        DeleteBookmarks(id).then(() => {
             GetBookmarks().then(data => {
                 setRows(data)
             })
-
         })
     }
 
@@ -109,7 +105,6 @@ export default function BookmarksList() {
                 </AppBar>
             </Box>
             <Grid container spacing={0} style={{ width: '100%', height: 'calc(100% - 65px)' }} >
-
                 <TableContainer component={Paper}>
                     <Table sx={{ minWidth: 650 }} aria-label="simple table">
                         <TableHead>
@@ -143,7 +138,6 @@ export default function BookmarksList() {
                         </TableBody>
                     </Table>
                 </TableContainer>
-
             </Grid>
         </div>
     );

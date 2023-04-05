@@ -10,52 +10,44 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 
-import { st } from './style';
-import { LoginUser } from '../api/auth'
+import { st } from '../../layouts/style';
+import { loginUser } from '../../api/auth'
+import { validateEmail } from '../../utils/validators';
+import ErrorAlert from '../ErrorAlert';
 
-const validateEmail = (email) => {
-    return String(email)
-        .toLowerCase()
-        .match(
-            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        );
-};
-
-export default function LayoutLogin() {
+export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
     const navigate = useNavigate();
 
-    const redirectToRegister = () => {
-        navigate("/register");
-        navigate(0)
-    }
-
-
-    const updateEmail = (e) => {
-        setEmail(e)
-    };
-
-    const updatePassword = (e) => {
-        setPassword(e)
-    };
-
-    const loginUser = () => {
+    const handleLogin = () => {
         if (validateEmail(email) === null) {
-            return
+            setAlertMessage('Please insert a valid email.')
+            setIsAlertOpen(true);
         }
 
-        LoginUser(email, password).then(data => {
-            if (data.token === null) {
-                navigate("/register");
-                navigate(0)
-            } else {
-                localStorage.setItem('test-token', data.Token)
-                localStorage.setItem('email', data.Email)
-                navigate("/buildings");
-                navigate(0)
-            }
+        // TODO: Implement AuthContext and useAuth to login.
+        loginUser(email, password).then(data => {
+            const { Token, Email } = data;
+            if (!Token) {
+                setAlertMessage('Invalid email or password')
+                setIsAlertOpen(true);
+                return
+            } 
+            localStorage.setItem('test-token', Token)
+            localStorage.setItem('email', Email)
+            navigate("/buildings");
+        }).catch((error) => {
+            setAlertMessage(error?.message || 'An error has occurred. Try again later.')
+            setIsAlertOpen(true);
         })
+    }
+
+    const handleCloseAlert = () => {
+        setIsAlertOpen(false);
+        setAlertMessage('')
     }
 
     return (
@@ -66,26 +58,23 @@ export default function LayoutLogin() {
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                             My Buildings
                         </Typography>
-                        <Button color="inherit" onClick={redirectToRegister}>Register</Button>
+                        <Button color="inherit" onClick={() => navigate("/register")}>Register</Button>
                     </Toolbar>
                 </AppBar>
             </Box>
             <Grid container spacing={0} style={{ width: '100%', height: 'calc(100% - 65px)' }} >
-                <Grid item style={{ width: '100%', height: '20%' }} >
-
-                </Grid>
-                <Grid item style={{ width: '100%', height: '10%' }} >
+                <Grid item style={{ width: '100%', height: '10%', marginTop: '30%' }} >
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }} style={st.center}>
                         Login
                     </Typography>
                 </Grid>
-                <Grid item style={{ width: '100%', height: '40%' }} >
+                <Grid item style={{ width: '100%', height: '50%', marginBottom: '40%' }} >
                     <Grid item style={st.center}>
                         <TextField
                             id="standard-basic"
                             label="Email"
                             variant="standard"
-                            onChange={(event) => { updateEmail(event.target.value) }}
+                            onChange={(event) => setEmail(event.target.value)}
                         />
                     </Grid>
                     <Grid item style={st.center}>
@@ -95,17 +84,15 @@ export default function LayoutLogin() {
                             type="password"
                             autoComplete="current-password"
                             variant="standard"
-                            onChange={(event) => { updatePassword(event.target.value) }}
+                            onChange={(event) => setPassword(event.target.value)}
                         />
                     </Grid>
                     <Grid item style={st.center}>
-                        <Button variant="contained" onClick={loginUser}>Login</Button>
+                        <Button variant="contained" onClick={handleLogin}>Login</Button>
                     </Grid>
                 </Grid>
-                <Grid item style={{ width: '100%', height: '30%' }} >
-
-                </Grid>
             </Grid>
+            <ErrorAlert open={isAlertOpen} onClose={handleCloseAlert} error={alertMessage}/>
         </div>
     );
 }

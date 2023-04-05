@@ -1,33 +1,31 @@
 import * as jwt from 'react-jwt';
 
-export async function LoginUser(_email, _pass) {
+export async function loginUser(email, password) {
 
     const response = await fetch(`/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: _email, password: _pass })
+        body: JSON.stringify({ email, password })
     })
 
-    return await response.json();
+    return response.json();
 
 }
 
-export async function RegisterUser(_email, _pass) {
+export async function registerUser(email, password) {
 
     const response = await fetch(`/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: _email, password: _pass })
+        body: JSON.stringify({ email, password })
     })
 
     return await response.json();
 
 }
 
-export function TokenIsValid(_token) {
-    const myDecodedToken = jwt.decodeToken(_token);
-
-    if (jwt.isExpired(_token)) {
+export function TokenIsValid(token) {
+    if (jwt.isExpired(token)) {
         return false
     }
     return true
